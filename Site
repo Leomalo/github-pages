@@ -1,0 +1,46 @@
+const express = require('express');
+const cors = require('cors');
+const fs = require('fs');
+
+const app = express();
+const PORT = 3000;
+
+// Permitir requisições do Google Sites (substitua pela URL do seu site)
+const corsOptions = {
+    origin: 'https://sites.google.com', // Aceita requisições do Google Sites
+    methods: 'GET,POST',
+    allowedHeaders: 'Content-Type'
+};
+
+app.use(cors(corsOptions));
+app.use(express.json());
+
+// Rota para receber sugestões
+app.post('/enviar-sugestao', (req, res) => {
+    const sugestao = req.body;
+
+    if (!sugestao || !sugestao.texto) {
+        return res.status(400).json({ erro: 'Sugestão inválida' });
+    }
+
+    // Lendo sugestões já existentes
+    let sugestoes = [];
+    if (fs.existsSync('sugestoes.json')) {
+        const data = fs.readFileSync('sugestoes.json');
+        sugestoes = JSON.parse(data);
+    }
+
+    // Adicionando nova sugestão
+    sugestoes.push(sugestao);
+
+    // Salvando no arquivo JSON
+    fs.writeFileSync('sugestoes.json', JSON.stringify(sugestoes, null, 2));
+
+    console.log('Sugestão recebida:', sugestao);
+    res.json({ mensagem: 'Sugestão recebida com sucesso!' });
+});
+
+// Iniciar servidor
+app.listen(PORT, () => {
+    console.log(`Servidor rodando em http://localhost:${PORT}`);
+});
